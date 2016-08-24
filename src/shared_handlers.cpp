@@ -235,6 +235,80 @@ void openxc::signals::handlers::handleGpsMessage(CanMessage* message,
     publishNumericalMessage("longitude", longitude, pipeline);
 }
 
+void openxc::signals::handlers::handleBatteryMessage(CanMessage* message, Pipeline* pipeline) {
+    uint8_t idx = message->data[0];
+    publishNumericalMessage("index", idx, pipeline);
+
+    uint8_t b0 = message->data[0];
+    uint8_t b1 = message->data[1];
+    uint8_t b2 = message->data[2];
+    uint8_t b3 = message->data[3];
+    uint8_t b4 = message->data[4];
+    uint8_t b5 = message->data[5];
+    uint8_t b6 = message->data[6];
+    uint8_t b7 = message->data[7];
+    publishNumericalMessage("byte_0", b0, pipeline);
+    publishNumericalMessage("byte_1", b1, pipeline);
+    publishNumericalMessage("byte_2", b2, pipeline);
+    publishNumericalMessage("byte_3", b3, pipeline);
+    publishNumericalMessage("byte_4", b4, pipeline);
+    publishNumericalMessage("byte_5", b5, pipeline);
+    publishNumericalMessage("byte_6", b6, pipeline);
+    publishNumericalMessage("byte_7", b7, pipeline);
+
+    uint16_t ui1 = (message->data[1] << 6) | ((message->data[2] & 0xFC) >> 2);
+    uint16_t ui2 = ((message->data[2] & 0x03) << 12) | (message->data[3] << 4) | ((message->data[4] & 0xF0) >> 4);
+    uint16_t ui3 = ((message->data[4] & 0x0F) << 10) | (message->data[5] << 2) | ((message->data[6] & 0xC0) >> 6);
+    uint16_t ui4 = ((message->data[6] & 0x3F) << 8) | (message->data[7]);
+
+    if(idx < 24) {
+        float v1 = 0.000305 * (float) ui1;
+        float v2 = 0.000305 * (float) ui2;
+        float v3 = 0.000305 * (float) ui3;
+        float v4 = 0.000305 * (float) ui4;
+
+        char* n1 = (char*) malloc(16 * sizeof(char));
+        sprintf(n1, "voltage_%d", idx*4 + 1);
+        char* n2 = (char*) malloc(16 * sizeof(char));
+        sprintf(n2, "voltage_%d", idx*4 + 2);
+        char* n3 = (char*) malloc(16 * sizeof(char));
+        sprintf(n3, "voltage_%d", idx*4 + 3);
+        char* n4 = (char*) malloc(16 * sizeof(char));
+        sprintf(n4, "voltage_%d", idx*4 + 4);
+
+        publishNumericalMessage(n1, v1, pipeline);
+        publishNumericalMessage(n2, v2, pipeline);
+        publishNumericalMessage(n3, v3, pipeline);
+        publishNumericalMessage(n4, v4, pipeline);
+
+    } else {
+        int16_t i1 = (ui1 & 0x1FFF) - (ui1 & 0x2000);
+        int16_t i2 = (ui2 & 0x1FFF) - (ui2 & 0x2000);
+        int16_t i3 = (ui3 & 0x1FFF) - (ui3 & 0x2000);
+        int16_t i4 = (ui4 & 0x1FFF) - (ui4 & 0x2000);
+
+        float t1 = 0.0122 * (float) i1;
+        float t2 = 0.0122 * (float) i2;
+        float t3 = 0.0122 * (float) i3;
+        float t4 = 0.0122 * (float) i4;
+
+        char* n1 = (char*) malloc(16 * sizeof(char));
+        sprintf(n1, "temp_%d", (idx-24)*4 + 1);
+        char* n2 = (char*) malloc(16 * sizeof(char));
+        sprintf(n2, "temp_%d", (idx-24)*4 + 2);
+        char* n3 = (char*) malloc(16 * sizeof(char));
+        sprintf(n3, "temp_%d", (idx-24)*4 + 3);
+        char* n4 = (char*) malloc(16 * sizeof(char));
+        sprintf(n4, "temp_%d", (idx-24)*4 + 4);
+
+        publishNumericalMessage(n1, t1, pipeline);
+        publishNumericalMessage(n2, t2, pipeline);
+        publishNumericalMessage(n3, t3, pipeline);
+        publishNumericalMessage(n4, t4, pipeline);        
+    }
+
+}
+
 openxc_DynamicField openxc::signals::handlers::handleExteriorLightSwitch(CanSignal* signal,
         CanSignal* signals, int signalCount, Pipeline* pipeline, float value,
         bool* send) {

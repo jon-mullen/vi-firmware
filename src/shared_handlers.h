@@ -209,6 +209,15 @@ openxc_DynamicField handleUnsignedSteeringWheelAngle(CanSignal* signal,
 void handleGpsMessage(CanMessage* message, CanSignal* signals,
         int signalCount, openxc::pipeline::Pipeline* pipeline);
 
+/*
+ * This is a message handler, and takes care of sending the JSON messages.
+ *
+ * message - The message.
+ * pipeline - The pipeline that wraps the output devices.
+ */
+void handleBatteryMessage(CanMessage* message, openxc::pipeline::Pipeline* pipeline);
+
+
 /* Pull two signal out of the CAN message, "button_type" and "button_state" and
  * combine the result into a single OpenXC JSON with both a value (the button
  * ID) and an event (pressed, held, released, etc).
